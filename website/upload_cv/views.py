@@ -15,13 +15,13 @@ class CvUploadView(APIView):
 
         file_obj = request.data['file']
 
-        client_secret_file = 'website/client_secret_703535049527-3jpdjjotceg4dpfqrjl9qrknk2ncqlth.apps.googleusercontent.com.json'
+        client_secret_file = 'website/client2.json'
         api_name = 'drive'
         api_version = 'v3'
         scopes = ['https://www.googleapis.com/auth/drive']
 
         service = Create_Service(client_secret_file, api_name, api_version, scopes)
-        folder_id = '1_1ELo1RgANF_b_DjWeJS0VgXA7W8Bpk8'
+        folder_id = '15FHUf7XEQjtqroQPxc87ibuwklG1ZbfS'
         
         cv = io.BytesIO(file_obj.read())
 
@@ -31,6 +31,7 @@ class CvUploadView(APIView):
             'parents': [folder_id]
             },
             media_body = MediaIoBaseUpload(cv, mimetype = 'application/pdf'),
+            fields = 'id'
         ).execute() 
 
         return Response(status=status.HTTP_202_ACCEPTED)

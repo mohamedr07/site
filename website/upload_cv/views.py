@@ -1,19 +1,42 @@
-from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from googleapiclient.http import MediaIoBaseUpload
 from rest_framework import status
 from .google import Create_Service
-import io
+import io, os
 
 
 class CvUploadView(APIView):
 
-    parser_classes = [FileUploadParser]
 
-    def put(self, request, filename, format=None):
-
+    def put(self, request, format=None):
+        
         file_obj = request.data['file']
+        file_name, file_ext = os.path.splitext(file_obj.name)
+
+        file_types = {
+            '.doc': 'application/msword',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.pdf': 'application/pdf'
+            }
+
+        allowed_file_type = False
+        mime_type = ''
+
+        for key, value in file_types.items():
+            print(file_ext)
+            print(key)
+            print(value)
+            print('...............')
+            if file_ext == key:
+                allowed_file_type = True
+                mime_type = value
+
+        if allowed_file_type == False:
+            return Response("Error: File type not allowed")
+
+        print(allowed_file_type)
+        # print(mime_type)
 
         client_secret_file = 'website/client2.json'
         api_name = 'drive'
@@ -30,7 +53,7 @@ class CvUploadView(APIView):
             'name': file_obj.name,
             'parents': [folder_id]
             },
-            media_body = MediaIoBaseUpload(cv, mimetype = 'application/pdf'),
+            media_body = MediaIoBaseUpload(cv, mimetype = mime_type),
             fields = 'id'
         ).execute() 
 

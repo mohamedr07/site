@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'website.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'bla', 
+        'USER': 'postgres', 
+        'PASSWORD': 'root',
+        'HOST': 'localhost', 
+        'PORT': '5432',
     }
 }
 
@@ -126,3 +130,139 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
+
+AUTHENTICATION_BACKENDS = [
+    "django_python3_ldap.auth.LDAPBackend",
+    'django.contrib.auth.backends.ModelBackend',
+    ]
+
+LDAP_AUTH_URL = "ldap.forumsys.com:389"
+
+LDAP_AUTH_CONNECTION_USERNAME = 'cn=read-only-admin,dc=example,dc=com'
+LDAP_AUTH_CONNECTION_PASSWORD = 'password'
+
+LDAP_AUTH_SEARCH_BASE = "dc=example,dc=com"
+
+# The LDAP class that represents a user.
+LDAP_AUTH_OBJECT_CLASS = "inetOrgPerson"
+
+LDAP_AUTH_USE_TLS = False
+
+
+# A tuple of django model fields used to uniquely identify a user.
+LDAP_AUTH_USER_LOOKUP_FIELDS = ("username",)
+
+# Path to a callable that takes a dict of {model_field_name: value},
+# returning a dict of clean model data.
+# Use this to customize how data loaded from LDAP is saved to the User model.
+LDAP_AUTH_CLEAN_USER_DATA = "django_python3_ldap.utils.clean_user_data"
+
+# Path to a callable that takes a user model, a dict of {ldap_field_name: [value]}
+# a LDAP connection object (to allow further lookups), and saves any additional
+# user relationships based on the LDAP data.
+# Use this to customize how data loaded from LDAP is saved to User model relations.
+# For customizing non-related User model fields, use LDAP_AUTH_CLEAN_USER_DATA.
+LDAP_AUTH_SYNC_USER_RELATIONS = "django_python3_ldap.utils.sync_user_relations"
+
+# Path to a callable that takes a dict of {ldap_field_name: value},
+# returning a list of [ldap_search_filter]. The search filters will then be AND'd
+# together when creating the final search filter.
+LDAP_AUTH_FORMAT_SEARCH_FILTERS = "django_python3_ldap.utils.format_search_filters"
+
+from django_python3_ldap.utils import format_search_filters
+
+def custom_format_search_filters(ldap_fields):
+    # Add in simple filters.
+    ldap_fields["member"] = "foo"
+    # Call the base format callable.
+    search_filters = format_search_filters(ldap_fields)
+    # Advanced: apply custom LDAP filter logic.
+    search_filters.append("(|(member=scientists)(member=mathematicians))")
+    # All done!
+    return search_filters
+
+
+# Path to a callable that takes a dict of {model_field_name: value}, and returns
+# a string of the username to bind to the LDAP server.
+# Use this to support different types of LDAP server.
+LDAP_AUTH_FORMAT_USERNAME = "django_python3_ldap.utils.format_username_openldap"
+
+
+# from ldap3 import Server, Connection
+
+
+# username = 'einstein'
+# password = 'password'
+
+# server = Server(LDAP_AUTH_URL)
+# c = Connection(server)
+
+
+# c.open()
+# c.bind()
+
+# if c.bind():
+#     user_search_filter = '(uid={})'.format(username)
+#     c.search(search_base=LDAP_AUTH_SEARCH_BASE,
+#                 search_filter=user_search_filter)
+
+# username = c.response[0]['dn']
+# if c.rebind(user=username, password=password):
+#     print('...................................')
+#     print(c)
+#     print('...................................')
+# else:
+#     print('error')
+
+# c.unbind()
+
+# server = LdapServer({
+#     'port': 3333,
+#     'bind_dn': 'cn=admin,dc=zoldar,dc=net',
+#     'password': 'pass1',
+#     'base': {'objectclass': ['domain'],
+#              'dn': 'dc=zoldar,dc=net',
+#              'attributes': {'dc': 'zoldar'}},
+#     'entries': [
+#         {'objectclass': 'domain',
+#          'dn': 'dc=users,dc=zoldar,dc=net',
+#          'attributes': {'dc': 'users'}},
+#         {'objectclass': 'organization',
+#          'dn': 'o=foocompany,dc=users,dc=zoldar,dc=net',
+#          'attributes': {'o': 'foocompany'}},
+#     ]
+# })
+
+
+# try:
+#     server.start()
+
+#     dn = "cn=admin,dc=zoldar,dc=net"
+#     pw = "pass1"
+
+#     srv = ldap3.Server('localhost', port=3333)
+#     conn = ldap3.Connection(srv, user=dn, password=pw, auto_bind=True)
+
+#     print(conn.extend.standard.who_am_i())
+   
+#     base_dn = 'dc=zoldar,dc=net'
+#     search_filter = '(objectclass=domain)'
+#     attrs = ['dc']
+
+    
+#     conn.search(base_dn, search_filter, attributes=attrs)
+
+#     print(conn.response)
+#     # [{
+#     #    'dn': 'o=foocompany,dc=users,dc=zoldar,dc=net',
+#     #    'raw_attributes': {'o': [b'foocompany']},
+#     #    'attributes': {'o': ['foocompany']},
+#     #    'type': 'searchResEntry'
+#     # }]
+# finally:
+#     server.stop()
